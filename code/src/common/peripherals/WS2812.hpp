@@ -71,6 +71,9 @@ public:
         GRB = 1
     };
 
+    /**
+     * @brief Default constructor for the WS2812 class. Does not initialize the hardware.
+     */
     WS2812(void) {};
 
     /**
