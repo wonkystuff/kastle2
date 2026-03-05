@@ -71,6 +71,8 @@ public:
         GRB = 1
     };
 
+    WS2812(void) {};
+
     /**
      * @brief Constructor for the WS2812 class.
      * @param pin GPIO pin number.

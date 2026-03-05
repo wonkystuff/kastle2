@@ -42,7 +42,7 @@ SOFTWARE.
 
 using namespace kastle2;
 
-WS2812 pixels = WS2812(Hardware::PIN_LEDS, 3, pio0, 3);
+WS2812 pixels = WS2812();
 
 EnumArray<Hardware::Button, size_t> ButtonsPins = {
     Hardware::PIN_BUTTON_SHIFT,
@@ -126,7 +126,7 @@ void Hardware::Init()
     gpio_init(PIN_RX);
     gpio_set_dir(PIN_RX, GPIO_OUT);
 #endif
-
+    pixels = WS2812(Hardware::PIN_LEDS, 3, pio0, 3);
     // Init NeoPixels
     for (Led led : EnumRange<Led>())
     {
