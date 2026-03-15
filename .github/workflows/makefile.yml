@@ -29,7 +29,10 @@ jobs:
 
       - name: Checkout pico-sdk submodules
         working-directory: ${{github.workspace}}/pico-sdk
-        run: git submodule update --init
+        run: |
+          git submodule update --init
+          git clone --depth=1 https://github.com/raspberrypi/pico-sdk.git
+          export PICO_SDK_PATH=${{github.workspace}}/pico-sdk
 
       - name: Install dependencies
         run: |
