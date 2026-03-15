@@ -1,18 +1,13 @@
 name: Build on ubuntu against pico-sdk develop
 on:
   workflow_dispatch:
-  #push:
-  #  branches:
-  #    - 'develop'
-  #    - 'main'
+  push:
+    branches:
+      - 'main'
   pull_request:
     types: [opened, reopened]
     branches:
-      - 'develop'
       - 'main'
-  push:
-    tags:
-    - 'v*'
 
 jobs:
   build:
