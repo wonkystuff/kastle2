@@ -16,42 +16,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     
-      - name: Clean workspace
-        run: |
-          echo "Cleaning up previous run"
-          rm -rf "${{ github.workspace }}"
-          mkdir -p "${{ github.workspace }}"
-      - name: Checkout pico_gps_teseo_i2c
+      - name: Checkout kastle2
         uses: actions/checkout@v4
         with:
-          path: pico_gps_teseo
+          path: kastle2
 
-      - name: Checkout pico-sdk/develop
+      - name: Checkout pico-sdk
         uses: actions/checkout@v4
         with:
           repository: raspberrypi/pico-sdk
-          ref: develop
           path: pico-sdk
 
       - name: Checkout pico-sdk submodules
-      
         working-directory: ${{github.workspace}}/pico-sdk
         run: git submodule update --init
+
       - name: Install dependencies
         run: |
-          sudo apt-get install cmake
-          #curl -Lo gcc-arm-none-eabi.tar.bz2 "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2?rev=78196d3461ba4c9089a67b5f33edf82a&hash=5631ACEF1F8F237389F14B41566964EC"
-          #sudo mkdir /opt/gcc-arm-none-eabi
-          #sudo tar xf gcc-arm-none-eabi.tar.bz2 --strip-components=1 -C /opt/gcc-arm-none-eabi
-          #echo 'export PATH=$PATH:/opt/gcc-arm-none-eabi/bin' | sudo tee -a /etc/profile.d/gcc-arm-none-eabi.sh
-          #export PATH=$PATH:/opt/gcc-arm-none-eabi/bin
-          #export PICO_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi/bin
-          #source /etc/profile
-          #arm-none-eabi-gcc --version
-          sudo apt install gcc-arm-none-eabi
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc-arm-none-eabi
 
       - name: Configure
+        working-directory: ${{github.workspace}}/kastle2
         run: ./configure.sh
         
       - name: Build Project
-        run: make -C code/build
+        run: make -C ${{github.workspace}}/kastle2/code/build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: kastle2/code/build/
