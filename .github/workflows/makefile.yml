@@ -57,7 +57,7 @@ jobs:
           draft: false
           prerelease: false
           release_name: k2-${{github.ref}}
-          #tag_name: ${{ github.ref }}
+          tag_name: k2-${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
