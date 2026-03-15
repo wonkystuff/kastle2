@@ -20,12 +20,12 @@ jobs:
     steps:
     
       - name: Checkout kastle2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: kastle2
 
       - name: Checkout pico-sdk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: raspberrypi/pico-sdk
           path: pico-sdk
