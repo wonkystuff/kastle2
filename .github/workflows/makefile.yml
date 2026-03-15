@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    
+
       - name: Checkout kastle2
         uses: actions/checkout@v6
         with:
@@ -40,7 +40,7 @@ jobs:
         run: |
           export PICO_SDK_PATH=${{github.workspace}}/pico-sdk
           ./configure.sh
-        
+
       - name: Build Project
         run: make -C ${{github.workspace}}/kastle2/code/build
 
@@ -49,15 +49,15 @@ jobs:
         with:
           name: build-${{github.ref_name}}
           path: kastle2/code/build/output/*.uf2
-          
+
       - name: release
         uses: actions/create-release@v1
         id: create_release
         with:
           draft: false
           prerelease: false
-          release_name: k2-${{github.ref_name}}
+          release_name: k2-${{github.ref}}
           #tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        
+
