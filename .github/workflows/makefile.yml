@@ -52,5 +52,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-${{github.ref_name}}
           path: kastle2/code/build/output/*.uf2
