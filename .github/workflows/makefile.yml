@@ -1,21 +1,54 @@
-name: Makefile CI
-
+name: Build on ubuntu against pico-sdk develop
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:
+  #push:
+  #  branches:
+  #    - 'develop'
+  #    - 'main'
   pull_request:
-    branches: [ "main" ]
+    types: [opened, reopened]
+    branches:
+      - 'develop'
+      - 'main'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+    
+      - name: Clean workspace
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+          mkdir -p "${{ github.workspace }}"
+      - name: Checkout pico_gps_teseo_i2c
+        uses: actions/checkout@v4
+        with:
+          path: pico_gps_teseo
 
-    - name: configure
-      run: ./configure.sh
+      - name: Checkout pico-sdk/develop
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: develop
+          path: pico-sdk
 
-    - name: build_all
-      run: make -C code/build
+      - name: Checkout pico-sdk submodules
+      
+        working-directory: ${{github.workspace}}/pico-sdk
+        run: git submodule update --init
+      - name: Install dependencies
+        run: |
+          sudo apt-get install cmake
+          #curl -Lo gcc-arm-none-eabi.tar.bz2 "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2?rev=78196d3461ba4c9089a67b5f33edf82a&hash=5631ACEF1F8F237389F14B41566964EC"
+          #sudo mkdir /opt/gcc-arm-none-eabi
+          #sudo tar xf gcc-arm-none-eabi.tar.bz2 --strip-components=1 -C /opt/gcc-arm-none-eabi
+          #echo 'export PATH=$PATH:/opt/gcc-arm-none-eabi/bin' | sudo tee -a /etc/profile.d/gcc-arm-none-eabi.sh
+          #export PATH=$PATH:/opt/gcc-arm-none-eabi/bin
+          #export PICO_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi/bin
+          #source /etc/profile
+          #arm-none-eabi-gcc --version
+          sudo apt install gcc-arm-none-eabi
+          
+      - name: Build Project
+        run: make -C code/build
