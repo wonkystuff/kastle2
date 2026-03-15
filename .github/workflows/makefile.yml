@@ -31,8 +31,6 @@ jobs:
         working-directory: ${{github.workspace}}/pico-sdk
         run: |
           git submodule update --init
-          #git clone --depth=1 https://github.com/raspberrypi/pico-sdk.git
-          export PICO_SDK_PATH=${{github.workspace}}/pico-sdk
 
       - name: Install dependencies
         run: |
@@ -41,7 +39,9 @@ jobs:
 
       - name: Configure
         working-directory: ${{github.workspace}}/kastle2
-        run: ./configure.sh
+        run: |
+          export PICO_SDK_PATH=${{github.workspace}}/pico-sdk
+          ./configure.sh
         
       - name: Build Project
         run: make -C ${{github.workspace}}/kastle2/code/build
