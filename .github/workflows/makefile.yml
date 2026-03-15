@@ -49,6 +49,9 @@ jobs:
           #source /etc/profile
           #arm-none-eabi-gcc --version
           sudo apt install gcc-arm-none-eabi
-          
+
+      - name: Configure
+        run: ./configure.sh
+        
       - name: Build Project
         run: make -C code/build
