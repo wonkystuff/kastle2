@@ -73,7 +73,7 @@ jobs:
           
           # Change to webapps directory and commit
           cd kastle2-webapps
-          git add "wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}.uf2"
+          git add "wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}-no-samples.uf2"
           git commit -m "Update wave-bard firmware from ${{ github.ref_name }} branch (commit ${{ github.sha }})"
           git push
 
