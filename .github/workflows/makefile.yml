@@ -50,6 +50,33 @@ jobs:
           name: build-${{github.ref_name}}
           path: kastle2/code/build/output/*.uf2
 
+      - name: Publish firmware to kastle2-webapps
+        if: github.event_name == 'push'
+        uses: actions/checkout@v6
+        with:
+          repository: wonkystuff/kastle2-webapps
+          path: kastle2-webapps
+          token: ${{ secrets.WEBAPPS_TOKEN }}
+
+      - name: Copy and commit firmware
+        if: github.event_name == 'push'
+        run: |
+          # Set git config
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          
+          # Create target directory if it doesn't exist
+          mkdir -p kastle2-webapps/files/wave-bard-sample-loader/public/firmwares
+          
+          # Copy firmware with version (branch name)
+          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/files/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}.uf2"
+          
+          # Change to webapps directory and commit
+          cd kastle2-webapps
+          git add "files/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}.uf2"
+          git commit -m "Update wave-bard firmware from ${{ github.ref_name }} branch (commit ${{ github.sha }})"
+          git push
+
       - name: release
         uses: actions/create-release@v1
         id: create_release
@@ -60,4 +87,3 @@ jobs:
           tag_name: k2-${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
