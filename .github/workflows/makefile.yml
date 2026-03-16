@@ -69,7 +69,7 @@ jobs:
           #mkdir -p kastle2-webapps/wave-bard-sample-loader/public/firmwares
           
           # Copy firmware with version (branch name)
-          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}.uf2"
+          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}-no-samples.uf2"
           
           # Change to webapps directory and commit
           cd kastle2-webapps
