@@ -24,7 +24,6 @@ jobs:
       - name: display version
         run: |
           echo "Building ${{env.SW_VER}}"
-          exit(1)
 
       - name: Checkout kastle2
         uses: actions/checkout@v6
