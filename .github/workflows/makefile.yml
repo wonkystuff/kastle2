@@ -5,14 +5,25 @@ on:
     branches:
       - 'main'
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - 'main'
 
+env:
+  SW_VER: develop
+  
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Sets env vars for PR
+        run: |
+          echo "SW_VER=${{ github.ref_name }}" >> $GITHUB_ENV
+        if: startsWith(github.ref, 'refs/tags')
+
+      - name: display version
+        run: |
+          echo "Building ${{env.SW_VER}}"
 
       - name: Checkout kastle2
         uses: actions/checkout@v6
@@ -42,12 +53,14 @@ jobs:
           ./configure.sh
 
       - name: Build Project
-        run: make -C ${{github.workspace}}/kastle2/code/build
+        run: |
+          echo ${{github.ref_name}}
+          make -C ${{github.workspace}}/kastle2/code/build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{github.ref_name}}
+          name: build-${{env.SW_VER}}
           path: kastle2/code/build/output/*.uf2
 
       - name: Publish firmware to kastle2-webapps
@@ -69,12 +82,12 @@ jobs:
           #mkdir -p kastle2-webapps/wave-bard-sample-loader/public/firmwares
           
           # Copy firmware with version (branch name)
-          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}-no-samples.uf2"
+          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.SW_VER }}-no-samples.uf2"
           
           # Change to webapps directory and commit
           cd kastle2-webapps
-          git add "wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ github.ref_name }}-no-samples.uf2"
-          git commit -m "Update wave-bard firmware from ${{ github.ref_name }} branch (commit ${{ github.sha }})"
+          git add "wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.SW_VER }}-no-samples.uf2"
+          git commit -m "Update wave-bard firmware from ${{ env.SW_VER }} branch (commit ${{ github.sha }})"
           git push
 
       - name: release
