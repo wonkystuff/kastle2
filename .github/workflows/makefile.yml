@@ -60,7 +60,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{github.ref_name}}
+          name: build-${{env.SW_VER}}
           path: kastle2/code/build/output/*.uf2
 
       - name: Publish firmware to kastle2-webapps
