@@ -1,11 +1,12 @@
 name: Build on ubuntu against pico-sdk develop
+
 on:
   workflow_dispatch:
   push:
     branches:
       - 'main'
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
     branches:
       - 'main'
 
@@ -15,6 +16,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Sets env vars for PR
         run: |
@@ -54,7 +56,6 @@ jobs:
 
       - name: Build Project
         run: |
-          echo ${{github.ref_name}}
           make -C ${{github.workspace}}/kastle2/code/build
 
       - name: Upload artifacts
@@ -63,34 +64,91 @@ jobs:
           name: build-${{env.SW_VER}}
           path: kastle2/code/build/output/*.uf2
 
-      - name: Publish firmware to kastle2-webapps
-        if: github.event_name == 'push'
+      # -------------------------------
+      # PUBLISH SECTION (PR MERGE ONLY)
+      # -------------------------------
+
+      - name: Checkout kastle2-webapps
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
         uses: actions/checkout@v6
         with:
           repository: wonkystuff/kastle2-webapps
           path: kastle2-webapps
           token: ${{ secrets.WEBAPPS_TOKEN }}
 
-      - name: Copy and commit firmware
-        if: github.event_name == 'push'
+      - name: Determine next version
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
         run: |
-          # Set git config
+          cd kastle2-webapps
+          git fetch --tags
+
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+
+          echo "Latest tag: $LATEST_TAG"
+
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          echo "Labels: $LABELS"
+
+          COUNT=$(echo "$LABELS" | grep -Eo 'major|minor|patch' | wc -l)
+          if [ "$COUNT" -gt 1 ]; then
+            echo "Multiple version labels detected"
+            exit 1
+          fi
+
+          if echo "$LABELS" | grep -q "major"; then
+            MAJOR=$((MAJOR+1))
+            MINOR=0
+            PATCH=0
+          elif echo "$LABELS" | grep -q "minor"; then
+            MINOR=$((MINOR+1))
+            PATCH=0
+          else
+            PATCH=$((PATCH+1))
+          fi
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "Tag already exists!"
+            exit 1
+          fi
+
+          echo "RELEASE_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "New version: $NEW_TAG"
+
+      - name: Copy, commit, and tag firmware
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          
-          # Create target directory if it doesn't exist
-          #mkdir -p kastle2-webapps/wave-bard-sample-loader/public/firmwares
-          
-          # Copy firmware with version (branch name)
-          cp kastle2/code/build/output/kastle2-wave-bard.uf2 "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.SW_VER }}-no-samples.uf2"
-          
-          # Change to webapps directory and commit
+
+          cp kastle2/code/build/output/kastle2-wave-bard.uf2 \
+            "kastle2-webapps/wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.RELEASE_TAG }}-no-samples.uf2"
+
           cd kastle2-webapps
-          git add "wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.SW_VER }}-no-samples.uf2"
-          git commit -m "Update wave-bard firmware from ${{ env.SW_VER }} branch (commit ${{ github.sha }})"
-          git push
+
+          FILE="wave-bard-sample-loader/public/firmwares/kastle2-wave-bard-${{ env.RELEASE_TAG }}-no-samples.uf2"
+
+          git add "$FILE"
+          git commit -m "Release ${{ env.RELEASE_TAG }} (commit ${{ github.sha }})"
+
+          git tag "${{ env.RELEASE_TAG }}"
+
+          git push origin HEAD
+          git push origin "${{ env.RELEASE_TAG }}"
+
+      # -------------------------------
+      # OPTIONAL: RELEASE (push only)
+      # -------------------------------
 
       - name: release
+        if: github.event_name == 'push'
         uses: actions/create-release@v1
         id: create_release
         with:
